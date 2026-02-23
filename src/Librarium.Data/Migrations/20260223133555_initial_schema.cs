@@ -15,41 +15,87 @@ namespace Librarium.Data.Migrations
                 name: "Books",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    Title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Isbn = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Id = table.Column<Guid>(
+                        type: "uuid",
+                        nullable: false,
+                        defaultValueSql: "gen_random_uuid()"
+                    ),
+                    Title = table.Column<string>(
+                        type: "character varying(255)",
+                        maxLength: 255,
+                        nullable: false
+                    ),
+                    Isbn = table.Column<string>(
+                        type: "character varying(20)",
+                        maxLength: 20,
+                        nullable: false
+                    ),
                     PublishedYear = table.Column<short>(type: "smallint", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                    CreatedAt = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false,
+                        defaultValueSql: "NOW()"
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Books", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Members",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                    Id = table.Column<Guid>(
+                        type: "uuid",
+                        nullable: false,
+                        defaultValueSql: "gen_random_uuid()"
+                    ),
+                    FirstName = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: false
+                    ),
+                    LastName = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: false
+                    ),
+                    Email = table.Column<string>(
+                        type: "character varying(255)",
+                        maxLength: 255,
+                        nullable: false
+                    ),
+                    CreatedAt = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false,
+                        defaultValueSql: "NOW()"
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Members", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Loans",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    Id = table.Column<Guid>(
+                        type: "uuid",
+                        nullable: false,
+                        defaultValueSql: "gen_random_uuid()"
+                    ),
                     BookId = table.Column<Guid>(type: "uuid", nullable: false),
                     MemberId = table.Column<Guid>(type: "uuid", nullable: false),
-                    LoanDate = table.Column<DateOnly>(type: "date", nullable: false, defaultValueSql: "CURRENT_DATE"),
-                    ReturnDate = table.Column<DateOnly>(type: "date", nullable: true)
+                    LoanDate = table.Column<DateOnly>(
+                        type: "date",
+                        nullable: false,
+                        defaultValueSql: "CURRENT_DATE"
+                    ),
+                    ReturnDate = table.Column<DateOnly>(type: "date", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -59,49 +105,49 @@ namespace Librarium.Data.Migrations
                         column: x => x.BookId,
                         principalTable: "Books",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_Loans_Members_MemberId",
                         column: x => x.MemberId,
                         principalTable: "Members",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Books_Isbn",
                 table: "Books",
                 column: "Isbn",
-                unique: true);
+                unique: true
+            );
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Loans_BookId",
-                table: "Loans",
-                column: "BookId");
+            migrationBuilder.CreateIndex(name: "IX_Loans_BookId", table: "Loans", column: "BookId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Loans_MemberId",
                 table: "Loans",
-                column: "MemberId");
+                column: "MemberId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Members_Email",
                 table: "Members",
                 column: "Email",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Loans");
+            migrationBuilder.DropTable(name: "Loans");
 
-            migrationBuilder.DropTable(
-                name: "Books");
+            migrationBuilder.DropTable(name: "Books");
 
-            migrationBuilder.DropTable(
-                name: "Members");
+            migrationBuilder.DropTable(name: "Members");
         }
     }
 }

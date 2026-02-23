@@ -62,7 +62,7 @@ if (app.Environment.IsDevelopment())
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseApiDocumentation(librariumOptions);
 }
 
 var corsPolicy = app.Environment.IsDevelopment() ? "Development" : "Production";
