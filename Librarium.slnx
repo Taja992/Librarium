@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Librarium.Api/Librarium.Api.csproj" />
+    <Project Path="src/Librarium.Data/Librarium.Data.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,220 @@
+{
+  "folders": [
+    {
+      "name": "🏠 Root",
+      "path": "."
+    },
+    {
+      "name": "🌐 Librarium.Api",
+      "path": "src/Librarium.Api"
+    },
+    {
+      "name": "🗄️ Librarium.Data",
+      "path": "src/Librarium.Data"
+    }
+  ],
+  "settings": {
+    // Editor
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "csharpier.csharpier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    
+    // Files
+    "files.exclude": {
+      "**/bin": true,
+      "**/obj": true,
+      "**/.vs": true,
+      "**/node_modules": true
+    },
+    "files.watcherExclude": {
+      "**/bin/**": true,
+      "**/obj/**": true
+    },
+    
+    // C# Specific
+    "[csharp]": {
+      "editor.defaultFormatter": "csharpier.csharpier-vscode",
+      "editor.tabSize": 4,
+      "editor.insertSpaces": true
+    },
+    
+    // .NET
+    "dotnet.defaultSolution": "Librarium.sln",
+    "omnisharp.enableEditorConfigSupport": true,
+    
+    // Terminal
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    
+    // Search
+    "search.exclude": {
+      "**/bin": true,
+      "**/obj": true,
+      "**/node_modules": true,
+      "**/.git": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      // C# / .NET
+      "ms-dotnettools.csdevkit",
+      "ms-dotnettools.csharp",
+      "csharpier.csharpier-vscode",
+      
+      // Docker
+      "ms-azuretools.vscode-docker",
+      
+      // API Testing
+      "humao.rest-client",
+      
+      // Git
+      "eamodio.gitlens",
+      
+      // Utilities
+      "usernamehw.errorlens",
+      
+      // YAML (for docker-compose)
+      "redhat.vscode-yaml"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🚀 Launch Librarium.Api",
+        "type": "coreclr",
+        "request": "launch",
+        "preLaunchTask": "build-api",
+        "program": "${workspaceFolder}/src/Librarium.Api/bin/Debug/net10.0/Librarium.Api.dll",
+        "args": [],
+        "cwd": "${workspaceFolder}/src/Librarium.Api",
+        "stopAtEntry": false,
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "ASPNETCORE_HTTP_PORTS": "5000"
+        },
+        "console": "internalConsole"
+      },
+      {
+        "name": "🐛 Attach to Librarium.Api",
+        "type": "coreclr",
+        "request": "attach"
+      },
+      {
+        "name": "🐳 Docker: Launch Librarium.Api",
+        "type": "docker",
+        "request": "launch",
+        "preLaunchTask": "docker-run: debug",
+        "netCore": {
+          "appProject": "${workspaceFolder}/src/Librarium.Api/Librarium.Api.csproj"
+        }
+      }
+    ],
+    "compounds": []
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "build-api",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+          "build",
+          "${workspaceFolder}/src/Librarium.Api/Librarium.Api.csproj",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ],
+        "problemMatcher": "$msCompile",
+        "group": "build"
+      },
+      {
+        "label": "build-solution",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+          "build",
+          "${workspaceFolder}/Librarium.sln"
+        ],
+        "problemMatcher": "$msCompile",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "watch-api",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+          "watch",
+          "run",
+          "--project",
+          "${workspaceFolder}/src/Librarium.Api/Librarium.Api.csproj"
+        ],
+        "problemMatcher": "$msCompile"
+      },
+      {
+        "label": "clean",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+          "clean",
+          "${workspaceFolder}/Librarium.sln"
+        ],
+        "problemMatcher": "$msCompile"
+      },
+      {
+        "label": "restore",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+          "restore",
+          "${workspaceFolder}/Librarium.sln"
+        ],
+        "problemMatcher": []
+      },
+      {
+        "label": "format",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+          "csharpier",
+          "."
+        ],
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "docker-compose-up",
+        "type": "shell",
+        "command": "docker-compose up -d",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "docker-compose-down",
+        "type": "shell",
+        "command": "docker-compose down",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "docker-compose-build",
+        "type": "shell",
+        "command": "docker-compose up --build",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
+}
