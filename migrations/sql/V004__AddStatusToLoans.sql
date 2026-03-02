@@ -166,6 +166,16 @@ BEGIN
     END IF;
 END $EF$;
 
+-- Backfill existing loans: derive Status from ReturnDate, I ran this manually against DB
+-- NULL ReturnDate = still on loan (Active), non-NULL = returned
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260302101058_AddStatusToLoans') THEN
+    UPDATE "Loans" SET "Status" = 'Active'   WHERE "ReturnDate" IS NULL;
+    UPDATE "Loans" SET "Status" = 'Returned' WHERE "ReturnDate" IS NOT NULL;
+    END IF;
+END $EF$;
+
 DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260302101058_AddStatusToLoans') THEN

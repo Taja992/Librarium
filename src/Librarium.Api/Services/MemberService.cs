@@ -1,4 +1,4 @@
-using Librarium.Data.Entities;
+using Librarium.Api.Dtos.Member;
 using Librarium.Data.Interfaces;
 
 namespace Librarium.Api.Services;
@@ -12,8 +12,16 @@ public class MemberService : Interfaces.IMemberService
         _memberRepository = memberRepository;
     }
 
-    public async Task<IEnumerable<Member>> GetAllMembersAsync()
+    public async Task<IEnumerable<MemberDto>> GetAllMembersAsync()
     {
-        return await _memberRepository.GetAllAsync();
+        var members = await _memberRepository.GetAllAsync();
+        return members.Select(m => new MemberDto(
+            m.Id,
+            m.FirstName,
+            m.LastName,
+            m.Email,
+            m.PhoneNumber,
+            m.CreatedAt
+        ));
     }
 }
