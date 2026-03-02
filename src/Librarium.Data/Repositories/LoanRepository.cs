@@ -16,5 +16,9 @@ public class LoanRepository(LibrariumDbContext context) : ILoanRepository
     }
 
     public async Task<IEnumerable<Loan>> GetByMemberIdAsync(Guid memberId) =>
-        await context.Loans.Include(l => l.Book).Where(l => l.MemberId == memberId).ToListAsync();
+        await context
+            .Loans.IgnoreQueryFilters() // Add IgnoreQueryFilter
+            .Include(l => l.Book)
+            .Where(l => l.MemberId == memberId)
+            .ToListAsync();
 }

@@ -154,6 +154,21 @@ FROM "Loans"
 WHERE "Status" IS NULL;
 ```
 
-- Tighten column to NOT NULL later once backfill is confirmed
+- Tighten column to NOT NULL once backfill is confirmed
+- Deploy
 - existing endpoint ```status``` as an additive field that the front end will ignore until ready
 - once the frontend is ready return date will be removed and v2 endpoint will be introduced
+
+### Requirement 4: Books can be retired from the catalogue
+
+- Accept the migration as the developer wrote it
+- Reject WHERE clause and replace with global query filter
+
+```bash
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'Book' has a global query filter defined and is the required end of a relationship with the entity 'Loan'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+```
+
+- Update Loan history to .IgnoreQueryFilters() so retired books dont return null
+- IF I had other methods like GetByIdAsync they should also .IgnoreQueryFilters()
+- For Delete endpoint set up IsDeleted = true, or on dbcontext set up a soft delete intereceptor with an interface that can be put on the entities
