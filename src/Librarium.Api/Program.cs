@@ -2,6 +2,7 @@ using Librarium.Api.Configuration;
 using Librarium.Api.Endpoints;
 using Librarium.Api.Extensions;
 using Librarium.Data;
+using Librarium.Data.Entitie.Enum;
 // using Librarium.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 
@@ -94,6 +95,18 @@ app.MapLoanEndpoints();
 //             book.Authors.Add(unknownAuthor!);
 //         await context.SaveChangesAsync();
 //     }
+// }
+// Temporary backfill — same as above
+// using (var scope = app.Services.CreateScope())
+// {
+//     var context = scope.ServiceProvider.GetRequiredService<LibrariumDbContext>();
+
+//     var unsetLoans = await context.Loans.Where(l => l.Status == null).ToListAsync();
+
+//     foreach (var loan in unsetLoans)
+//         loan.Status = loan.ReturnDate.HasValue ? LoanStatus.Returned : LoanStatus.Active;
+
+//     await context.SaveChangesAsync();
 // }
 
 app.Run();

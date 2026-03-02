@@ -136,7 +136,16 @@ if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
 
 - The frontend isnt ready for the changes so I wont make v2 yet until they are
 - The new column will be nullable with a DB default of ```'Active'``` to protect loan inserts during the deployment window, when old backend instances are still running and don't know about ```Status``` yet
+- Deploy
 - Existing loans backfilled based on ReturnDate - Null means Active, not null means Returned
+- - I messed this up so I ran the below SQL
+
+```sql
+UPDATE "Loans"
+SET "Status" = 'Returned'
+WHERE "ReturnDate" IS NOT NULL;
+```
+
 - Deploy
 
 ```sql
