@@ -6,5 +6,5 @@ namespace Librarium.Api.Interfaces;
 public interface ILoanService
 {
     Task<Loan> CreateLoanAsync(NewLoanDto dto);
-    Task<IEnumerable<Loan>> GetLoansByMemberAsync(Guid memberId);
+    Task<IEnumerable<LoanDto>> GetLoansByMemberAsync(Guid memberId);
 }

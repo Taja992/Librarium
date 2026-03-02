@@ -1,10 +1,12 @@
 using Librarium.Api.Dtos.Loan;
+using Librarium.Api.Interfaces;
+using Librarium.Data.Entitie.Enum;
 using Librarium.Data.Entities;
 using Librarium.Data.Interfaces;
 
 namespace Librarium.Api.Services;
 
-public class LoanService : Interfaces.ILoanService
+public class LoanService : ILoanService
 {
     private readonly ILoanRepository _loanRepository;
 
@@ -15,12 +17,24 @@ public class LoanService : Interfaces.ILoanService
 
     public async Task<Loan> CreateLoanAsync(NewLoanDto dto)
     {
-        var loan = new Loan { BookId = dto.BookId, MemberId = dto.MemberId };
+        var loan = new Loan
+        {
+            BookId = dto.BookId,
+            MemberId = dto.MemberId,
+            Status = LoanStatus.Active,
+        };
         return await _loanRepository.AddAsync(loan);
     }
 
-    public async Task<IEnumerable<Loan>> GetLoansByMemberAsync(Guid memberId)
+    public async Task<IEnumerable<LoanDto>> GetLoansByMemberAsync(Guid memberId)
     {
-        return await _loanRepository.GetByMemberIdAsync(memberId);
+        var loans = await _loanRepository.GetByMemberIdAsync(memberId);
+        return loans.Select(l => new LoanDto(
+            l.Id,
+            l.Book.Title,
+            l.LoanDate,
+            l.ReturnDate,
+            l.Status?.ToString() ?? "Active"
+        ));
     }
 }
