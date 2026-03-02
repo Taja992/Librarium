@@ -2,6 +2,7 @@ using Librarium.Api.Configuration;
 using Librarium.Api.Endpoints;
 using Librarium.Api.Extensions;
 using Librarium.Data;
+// using Librarium.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -77,5 +78,22 @@ if (app.Environment.IsProduction())
 app.MapBookEndpoints();
 app.MapMemberEndpoints();
 app.MapLoanEndpoints();
+
+// Temporary backfill — If I wanted this permenant i'd give its own class and use IHosted
+// using (var scope = app.Services.CreateScope())
+// {
+//     var context = scope.ServiceProvider.GetRequiredService<LibrariumDbContext>();
+//     var booksWithNoAuthors = await context
+//         .Books.Include(b => b.Authors)
+//         .Where(b => !b.Authors.Any())
+//         .ToListAsync();
+//     if (booksWithNoAuthors.Any())
+//     {
+//         var unknownAuthor = await context.Authors.FindAsync(AuthorConfiguration.UnknownAuthorId);
+//         foreach (var book in booksWithNoAuthors)
+//             book.Authors.Add(unknownAuthor!);
+//         await context.SaveChangesAsync();
+//     }
+// }
 
 app.Run();

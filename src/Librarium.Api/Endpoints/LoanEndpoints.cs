@@ -1,5 +1,5 @@
+using Librarium.Api.Dtos.Loan;
 using Librarium.Api.Interfaces;
-using Librarium.Api.Requests;
 
 namespace Librarium.Api.Endpoints;
 
@@ -20,12 +20,9 @@ public static class LoanEndpoints
         return api;
     }
 
-    private static async Task<IResult> CreateLoan(
-        CreateLoanRequest request,
-        ILoanService loanService
-    )
+    private static async Task<IResult> CreateLoan(NewLoanDto dto, ILoanService loanService)
     {
-        var result = await loanService.CreateLoanAsync(request);
+        var result = await loanService.CreateLoanAsync(dto);
         return Results.Created($"/api/loans/{result.Id}", result);
     }
 
