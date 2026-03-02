@@ -1,6 +1,6 @@
 # Compulsory reasoning
 
-## Initial entities
+## V001 — initial_schema
 
 - Book — has a title, an ISBN, and a publication year
 - Member — has a first name, a last name, and an email address
@@ -62,7 +62,9 @@ COMMIT;
 
 ### Going forward I'll assume no down time is allowed
 
-### Requirement 1: Books need Authors
+### Requirement 1: Books need Authors *(Additive - with backfill on start up done in program.cs)*
+
+### V002 — AddAuthors
 
 - Add Author.cs
 - Update Book.cs to have a Collection of Authors (EFCore creates many-to-many BookAuthor)
@@ -87,11 +89,15 @@ using (var scope = app.Services.CreateScope())
 }
 ```
 
+#### API
+
 - Update DTOs to something that made sense to me
-- Update GetAll to include Authors
+- Update GetAllBooks to include Authors in repository
 - Add proper validation for whats needed, but for the compulsory, nothing
 
-### Requirement 2: Email addresses must be unique, and the member profile is expanding
+### Requirement 2: Email addresses must be unique, and the member profile is expanding *(Additive - With cavaet on Email duplicates that needed to resolved)*
+
+### V003 — AddNullablePhoneNumbers
 
 - Emails are already unique in Emailconfiguration.cs (I didn't read ahead i just set that up by default woops lol)
 
@@ -113,11 +119,13 @@ GROUP BY Email
 HAVING COUNT(*) > 1;
 ```
 
-- Then choose to contact the duplicates and resolve it manually, you can't just merge
+- Then choose to contact the duplicates and resolve it manually, you can't just merge, its not something that can be done without consumer interaction
 
 - For adding phone numbers the column will not be NOT NULL instead the application layer will enforce
 this for new members as well as sending out notifications to members to update their profile, at a later date
-once confident the columns is populated in all rows it can be changed.
+once confident the columns is populated in all rows it can be changed. Or never and always enforced in the application code.
+
+To check phone numbers:
 
 ```sql
 SELECT COUNT(*)
@@ -125,20 +133,27 @@ FROM "Members"
 WHERE "PhoneNumber" IS NULL;
 ```
 
-- Add this somewhere in the application code or fluent validation or .NET 10.0 added a new way to handle validation that I would look more into in this case
+### API
+
+- Add this in the application code (service layer) or fluent validation(in DTO) or .NET 10.0 added a new way to handle validation that I would look more into in this case:
+- members endpoint now returns phone numbers as well
 
 ```cs
 if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
     return Results.BadRequest("Phone number is required.");
 ```
 
-### Requirement 3: Loans need a status and the existing client cannot be updated
+- Updated return DTO to include phone numbers
+
+### Requirement 3: Loans need a status and the existing client cannot be updated *(Additive - The column required careful ordering using DB defaults, backfill eventually tightening restraints)*
+
+### V004–V005 — AddStatusToLoans / EnforceLoanStatusNotNull
 
 - The frontend isnt ready for the changes so I wont make v2 yet until they are
 - The new column will be nullable with a DB default of ```'Active'``` to protect loan inserts during the deployment window, when old backend instances are still running and don't know about ```Status``` yet
 - Deploy
 - Existing loans backfilled based on ReturnDate - Null means Active, not null means Returned
-- - I messed this up so I ran the below SQL
+  - I messed this up, but its acceptable since the column is nullable - I ran the below SQL
 
 ```sql
 UPDATE "Loans"
@@ -156,10 +171,15 @@ WHERE "Status" IS NULL;
 
 - Tighten column to NOT NULL once backfill is confirmed
 - Deploy
+
+### API
+
 - existing endpoint ```status``` as an additive field that the front end will ignore until ready
 - once the frontend is ready return date will be removed and v2 endpoint will be introduced
 
-### Requirement 4: Books can be retired from the catalogue
+### Requirement 4: Books can be retired from the catalogue *(Additive - New column, new endpoint, global query filter needed to be handled carefully)*
+
+### V006 — AddIsDeletedToBooks
 
 - Accept the migration as the developer wrote it
 - Reject WHERE clause and replace with global query filter
@@ -169,6 +189,31 @@ warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
       Entity 'Book' has a global query filter defined and is the required end of a relationship with the entity 'Loan'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
 ```
 
+### Api
+
+- I should've also added this into loan but I missed it, I realized this late and didnt want to add another migration for the sake of the compulsory
+
+```cs
+builder.HasQueryFilter(l => !l.Book.IsDeleted);
+```
+
 - Update Loan history to .IgnoreQueryFilters() so retired books dont return null
-- IF I had other methods like GetByIdAsync they should also .IgnoreQueryFilters()
+- If I had other methods like GetByIdAsync they should also .IgnoreQueryFilters()
 - For Delete endpoint set up IsDeleted = true, or on dbcontext set up a soft delete intereceptor with an interface that can be put on the entities
+
+### Requirement 5: The ISBN column is wrong and used everywhere *(Breaking - changing a field, required API reversionning, manual data correction needed, with the end goal to eventually retire v1)*
+
+### V007 — ReplaceIsbnIntegerWithString
+
+#### I couldn't properly replicate this since I made my ISBN a string at the start, so I just acted as if ISBN was an int
+
+- Cannot Alter column from int to varchar when data exists
+- Add new column, existing ISBNS will be null in new column
+
+### Api
+
+- Rename IsbnLegacy
+- Implement v2 endpoint as this is a breaking change
+  - v1 will read from IsbnLegacy and v2 will return new string ISBN
+- Notify v1 is deprecated
+- Once all consumers are on v2, v1/IsbnLegacy can be dropped

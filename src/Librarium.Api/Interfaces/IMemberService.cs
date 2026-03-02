@@ -1,8 +1,8 @@
-using Librarium.Data.Entities;
+using Librarium.Api.Dtos.Member;
 
 namespace Librarium.Api.Interfaces;
 
 public interface IMemberService
 {
-    Task<IEnumerable<Member>> GetAllMembersAsync();
+    Task<IEnumerable<MemberDto>> GetAllMembersAsync();
 }
