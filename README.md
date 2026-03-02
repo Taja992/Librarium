@@ -6,13 +6,7 @@
 docker-compose up -d
 ```
 
-### 2. Apply migrations
-
-```bash
-dotnet ef database update --project src/Librarium.Data --startup-project src/Librarium.Api
-```
-
-### 3. Start the API
+### 2. Start the API
 
 ```bash
 dotnet run --project src/Librarium.Api
