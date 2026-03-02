@@ -131,3 +131,20 @@ WHERE "PhoneNumber" IS NULL;
 if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
     return Results.BadRequest("Phone number is required.");
 ```
+
+### Requirement 3: Loans need a status and the existing client cannot be updated
+
+- The frontend isnt ready for the changes so I wont make v2 yet until they are
+- The new column will be nullable with a DB default of ```'Active'``` to protect loan inserts during the deployment window, when old backend instances are still running and don't know about ```Status``` yet
+- Existing loans backfilled based on ReturnDate - Null means Active, not null means Returned
+- Deploy
+
+```sql
+SELECT COUNT(*)
+FROM "Loans"
+WHERE "Status" IS NULL;
+```
+
+- Tighten column to NOT NULL later once backfill is confirmed
+- existing endpoint ```status``` as an additive field that the front end will ignore until ready
+- once the frontend is ready return date will be removed and v2 endpoint will be introduced

@@ -1,3 +1,5 @@
+using Librarium.Data.Entitie.Enum;
+
 namespace Librarium.Data.Entities;
 
 public class Loan
@@ -7,7 +9,7 @@ public class Loan
     public Guid MemberId { get; set; }
     public DateOnly LoanDate { get; set; }
     public DateOnly? ReturnDate { get; set; }
-
+    public LoanStatus? Status { get; set; } // nullable until backfill is confirmed
     public Book Book { get; set; } = null!;
     public Member Member { get; set; } = null!;
 }
