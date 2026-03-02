@@ -8,5 +8,6 @@ public record MemberDto(
     string FirstName,
     string LastName,
     string Email,
+    string? PhoneNumber,
     DateTime CreatedAt
 );
