@@ -6,6 +6,7 @@ public class Member
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public ICollection<Loan> Loans { get; set; } = [];

@@ -90,3 +90,44 @@ using (var scope = app.Services.CreateScope())
 - Update DTOs to something that made sense to me
 - Update GetAll to include Authors
 - Add proper validation for whats needed, but for the compulsory, nothing
+
+### Requirement 2: Email addresses must be unique, and the member profile is expanding
+
+- Emails are already unique in Emailconfiguration.cs (I didn't read ahead i just set that up by default woops lol)
+
+```cs
+builder.HasIndex(m => m.Email).IsUnique();
+```
+
+```sql
+SELECT Email, COUNT(*)
+FROM "Members"
+GROUP BY Email
+HAVING COUNT(*) > 1;
+
+or to Shows member IDs or details
+
+SELECT Email, COUNT(*) as Count, STRING_AGG(Id::text, ', ') as MemberIds
+FROM "Members"
+GROUP BY Email
+HAVING COUNT(*) > 1;
+```
+
+- Then choose to contact the duplicates and resolve it manually, you can't just merge
+
+- For adding phone numbers the column will not be NOT NULL instead the application layer will enforce
+this for new members as well as sending out notifications to members to update their profile, at a later date
+once confident the columns is populated in all rows it can be changed.
+
+```sql
+SELECT COUNT(*)
+FROM "Members"
+WHERE "PhoneNumber" IS NULL;
+```
+
+- Add this somewhere in the application code or fluent validation or .NET 10.0 added a new way to handle validation that I would look more into in this case
+
+```cs
+if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+    return Results.BadRequest("Phone number is required.");
+```

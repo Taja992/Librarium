@@ -12,6 +12,7 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(m => m.FirstName).HasMaxLength(100);
         builder.Property(m => m.LastName).HasMaxLength(100);
         builder.Property(m => m.Email).HasMaxLength(255);
+        builder.Property(m => m.PhoneNumber).HasMaxLength(20);
         builder.Property(m => m.CreatedAt).HasDefaultValueSql("NOW()");
 
         builder.HasIndex(m => m.Email).IsUnique();
