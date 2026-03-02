@@ -7,7 +7,7 @@ public class Book
     public string Isbn { get; set; } = string.Empty;
     public short PublishedYear { get; set; }
     public DateTime CreatedAt { get; set; }
-
+    public bool IsDeleted { get; set; }
     public ICollection<Loan> Loans { get; set; } = [];
 
     public ICollection<Author> Authors { get; set; } = [];

@@ -17,12 +17,20 @@ public class LoanService : ILoanService
 
     public async Task<Loan> CreateLoanAsync(NewLoanDto dto)
     {
+        // Below is what would be set up these methods existed
+
+        // var book = await _bookRepository.GetByIdAsync(dto.BookId);
+
+        // if (book is null || book.IsDeleted)
+        //     throw new InvalidOperationException("This book has been retired and cannot be loaned.");
+
         var loan = new Loan
         {
             BookId = dto.BookId,
             MemberId = dto.MemberId,
             Status = LoanStatus.Active,
         };
+
         return await _loanRepository.AddAsync(loan);
     }
 
