@@ -34,7 +34,7 @@ public class LoanService : ILoanService
             l.Book.Title,
             l.LoanDate,
             l.ReturnDate,
-            l.Status?.ToString() ?? "Active"
+            l.Status.ToString() ?? "Active"
         ));
     }
 }
