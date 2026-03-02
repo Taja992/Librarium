@@ -1,4 +1,4 @@
-using Librarium.Api.Requests;
+using Librarium.Api.Dtos.Loan;
 using Librarium.Data.Entities;
 using Librarium.Data.Interfaces;
 
@@ -13,9 +13,9 @@ public class LoanService : Interfaces.ILoanService
         _loanRepository = loanRepository;
     }
 
-    public async Task<Loan> CreateLoanAsync(CreateLoanRequest request)
+    public async Task<Loan> CreateLoanAsync(NewLoanDto dto)
     {
-        var loan = new Loan { BookId = request.BookId, MemberId = request.MemberId };
+        var loan = new Loan { BookId = dto.BookId, MemberId = dto.MemberId };
         return await _loanRepository.AddAsync(loan);
     }
 

@@ -9,4 +9,6 @@ public class Book
     public DateTime CreatedAt { get; set; }
 
     public ICollection<Loan> Loans { get; set; } = [];
+
+    public ICollection<Author> Authors { get; set; } = [];
 }

@@ -8,6 +8,7 @@ public class LibrariumDbContext(DbContextOptions<LibrariumDbContext> options) : 
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Loan> Loans => Set<Loan>();
+    public DbSet<Author> Authors => Set<Author>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
