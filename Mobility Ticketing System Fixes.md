@@ -1,16 +1,16 @@
-# Code Fix Snippets — Mobility Ticketing Review
+# Code Fix Snippets - Mobility Ticketing Review
 
 ---
 
-## Issue 1 [HIGH] — No Transaction in Ticket Purchase
+## Issue 1 [HIGH] - No Transaction in Ticket Purchase
 
 **Before** (`TicketPurchaseService.cs:54–68`): three unguarded sequential awaits, each on a separate connection.
 
 ```csharp
-// Charge happens here — external, cannot be rolled back
+// Charge happens here - external, cannot be rolled back
 var charge = await paymentGateway.ChargeAsync(...);
 
-// Three separate connections — no atomicity
+// Three separate connections - no atomicity
 await tickets.SaveAsync(ticket, cancellationToken);
 await payments.SaveAsync(payment, cancellationToken);
 await trips.IncrementReservedSeatsAsync(trip.Id, 1, cancellationToken);
@@ -19,7 +19,7 @@ await trips.IncrementReservedSeatsAsync(trip.Id, 1, cancellationToken);
 **After**: payment gateway call stays outside; all three DB writes share one transaction.
 
 ```csharp
-// External call first — outside any transaction
+// External call first - outside any transaction
 var charge = await paymentGateway.ChargeAsync(
     command.UserId, command.PaymentToken, amount, command.Currency, cancellationToken);
 
@@ -45,7 +45,7 @@ catch
 
 ---
 
-## Issue 2 [HIGH] — Client-Controlled Price Accepted as Payment Amount
+## Issue 2 [HIGH] - Client-Controlled Price Accepted as Payment Amount
 
 **Before** (`TicketPurchaseService.cs:34`): client can pass any price, including zero.
 
@@ -82,9 +82,9 @@ public record PurchaseTicketCommand(
 
 ---
 
-## Issue 3 [HIGH] — Ticket Code Collisions Under Concurrency
+## Issue 3 [HIGH] - Ticket Code Collisions Under Concurrency
 
-**Before** — schema has no uniqueness guarantee (`001_initial_schema.sql:81`):
+**Before** - schema has no uniqueness guarantee (`001_initial_schema.sql:81`):
 
 ```sql
 ticket_code text not null   -- no UNIQUE constraint
@@ -98,7 +98,7 @@ private static string CreateTicketCode(string userId, DateTime now)
 // Two purchases by the same user in the same second → identical code
 ```
 
-**After** — add uniqueness at the database level:
+**After** - add uniqueness at the database level:
 
 ```sql
 ALTER TABLE tickets
@@ -114,20 +114,20 @@ private static string CreateTicketCode()
 
 ---
 
-## Issue 4 [HIGH] — Double-Spend Race in Ticket Validation
+## Issue 4 [HIGH] - Double-Spend Race in Ticket Validation
 
 **Before** (`TicketValidationService.cs:18–41`): plain `SELECT` with no lock, then two separate writes. Concurrent validators both pass the status check.
 
 ```csharp
-// Step 1 — unguarded read, no FOR UPDATE
+// Step 1 - unguarded read, no FOR UPDATE
 var ticket = await tickets.GetByCodeAsync(command.TicketCode, cancellationToken);
 
 if (ticket.Status != "Paid") return Reject(...);   // both concurrent callers pass this
 
-// Step 2 — separate write (connection #1)
+// Step 2 - separate write (connection #1)
 await tickets.AddValidationAsync(validation, cancellationToken);
 
-// Step 3 — separate write (connection #2), too late to prevent the race
+// Step 3 - separate write (connection #2), too late to prevent the race
 await tickets.UpdateStatusAsync(ticket.Id, "Validated", cancellationToken);
 ```
 
@@ -146,7 +146,7 @@ RETURNING id;
 await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
 await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
-// Atomic status flip — exactly one concurrent caller will get a row back
+// Atomic status flip - exactly one concurrent caller will get a row back
 var claimedId = await connection.QuerySingleOrDefaultAsync<string>(
     "UPDATE tickets SET status = 'Validated' WHERE id = @ticketId AND status = 'Paid' RETURNING id",
     new { ticketId = ticket.Id }, transaction);
@@ -163,12 +163,12 @@ await transaction.CommitAsync(cancellationToken);
 
 ---
 
-## Issue 5 [HIGH] — Timetable Replacement Not Transactional; Orphans Sold Tickets
+## Issue 5 [HIGH] - Timetable Replacement Not Transactional; Orphans Sold Tickets
 
 **Before** (`PostgresTripRepository.cs:49–62`): delete then loop-insert, no transaction; no FK on `tickets.trip_id`.
 
 ```csharp
-// No transaction — mid-loop failure leaves zero trips for the route
+// No transaction - mid-loop failure leaves zero trips for the route
 await connection.ExecuteAsync(
     "DELETE FROM trips WHERE route_id = @routeId", new { routeId });
 
@@ -213,7 +213,7 @@ ALTER TABLE tickets
 
 ---
 
-## Issue 6 [MEDIUM] — Broken CQRS Projection
+## Issue 6 [MEDIUM] - Broken CQRS Projection
 
 **Before** (`MongoJourneySearchReadStore.cs:43–48`): writes only the route ID string into `RouteName`; all other fields left unchanged or empty.
 
@@ -223,7 +223,7 @@ await _collection.UpdateOneAsync(
     Builders<JourneySearchDocument>.Update.Set(x => x.RouteName, routeId), // writes ID into name field
     new UpdateOptions { IsUpsert = true },
     cancellationToken);
-// No departure list, no availability, no price — document is useless
+// No departure list, no availability, no price - document is useless
 ```
 
 **After**: query PostgreSQL for the full route snapshot and replace the document.
@@ -264,9 +264,9 @@ public async Task UpsertRouteAsync(string routeId, CancellationToken cancellatio
 
 ---
 
-## Issue 7 [MEDIUM] — Non-Atomic Availability Check; Unbucketed Cache Key
+## Issue 7 [MEDIUM] - Non-Atomic Availability Check; Unbucketed Cache Key
 
-**Before** — read-modify-write on the Redis counter (not atomic):
+**Before** - read-modify-write on the Redis counter (not atomic):
 
 ```csharp
 // TicketPurchaseService.cs:30–71
@@ -291,19 +291,19 @@ if (remaining is null)
     await availability.SetRemainingSeatsAsync(trip.RouteId, trip.ServiceDate, seats, cancellationToken);
 }
 
-// Atomic decrement — safe under concurrency
+// Atomic decrement - safe under concurrency
 var afterDecrement = await availability.DecrementRemainingSeatsAsync(
     trip.RouteId, trip.ServiceDate, 1, cancellationToken);
 
 if (afterDecrement < 0)
 {
-    // Restore and reject — seat was already taken
+    // Restore and reject - seat was already taken
     await availability.DecrementRemainingSeatsAsync(trip.RouteId, trip.ServiceDate, -1, cancellationToken);
     throw new InvalidOperationException("Trip has no remaining capacity.");
 }
 ```
 
-**Before** — search cache key ignores departure time (`RedisSearchCache.cs:25`):
+**Before** - search cache key ignores departure time (`RedisSearchCache.cs:25`):
 
 ```csharp
 private static RedisKey Key(JourneySearchRequest request)
@@ -324,9 +324,9 @@ private static RedisKey Key(JourneySearchRequest request)
 
 ---
 
-## Issue 8 [MEDIUM] — Reporting Inaccuracies
+## Issue 8 [MEDIUM] - Reporting Inaccuracies
 
-**Before** — trigger fires on every payment insert regardless of status (`002_reporting_views.sql:10–34`):
+**Before** - trigger fires on every payment insert regardless of status (`002_reporting_views.sql:10–34`):
 
 ```sql
 create or replace function apply_payment_to_daily_revenue()
@@ -344,7 +344,7 @@ begin
     return new;
 end;
 $$;
--- Fires for Failed and Pending payments too — inflates revenue figures
+-- Fires for Failed and Pending payments too - inflates revenue figures
 ```
 
 **After**: guard on payment status before inserting.
@@ -372,7 +372,7 @@ end;
 $$;
 ```
 
-**Before** — function-wrapped predicate blocks the index (`PostgresReportingRepository.cs:22`):
+**Before** - function-wrapped predicate blocks the index (`PostgresReportingRepository.cs:22`):
 
 ```sql
 where to_char(p.created_utc, 'YYYY-MM') = @month
@@ -387,7 +387,7 @@ where p.created_utc >= @monthStart       -- e.g. 2026-05-01 00:00:00
   and p.status = 'Captured'
 ```
 
-**Before** — monetary columns use floating-point (`001_initial_schema.sql`):
+**Before** - monetary columns use floating-point (`001_initial_schema.sql`):
 
 ```sql
 price  double precision not null,   -- tickets, products
@@ -406,19 +406,19 @@ ALTER TABLE daily_revenue_by_operator ALTER COLUMN gross_amount TYPE numeric(14,
 
 ---
 
-## Issue 9 [MEDIUM] — Missing Referential Integrity and Status Constraints
+## Issue 9 [MEDIUM] - Missing Referential Integrity and Status Constraints
 
-**Before** — six FK relationships are plain `text` columns; status values are unconstrained (`001_initial_schema.sql`):
+**Before** - six FK relationships are plain `text` columns; status values are unconstrained (`001_initial_schema.sql`):
 
 ```sql
--- No FK — orphaned tickets go undetected
+-- No FK - orphaned tickets go undetected
 trip_id text,
 
--- No constraint — any string is a valid status
+-- No constraint - any string is a valid status
 status text not null
 ```
 
-**After** — migration adding FKs and CHECK constraints:
+**After** - migration adding FKs and CHECK constraints:
 
 ```sql
 -- 007_add_constraints.sql
@@ -456,9 +456,9 @@ ALTER TABLE validations ADD CONSTRAINT chk_validations_result
 
 ---
 
-## Issue 10 [LOW] — In-Memory Event Queue Loses Events on Restart
+## Issue 10 [LOW] - In-Memory Event Queue Loses Events on Restart
 
-**Before** (`BackgroundQueueEventPublisher.cs:7`): plain .NET channel — no persistence.
+**Before** (`BackgroundQueueEventPublisher.cs:7`): plain .NET channel - no persistence.
 
 ```csharp
 private readonly Channel<object> _channel = Channel.CreateUnbounded<object>();
@@ -491,10 +491,10 @@ await connection.ExecuteAsync("""
     transaction);
 ```
 
-Poller dispatches and marks rows as sent — events survive any process restart:
+Poller dispatches and marks rows as sent - events survive any process restart:
 
 ```csharp
-// OutboxPollerWorker — runs on a timer, e.g. every 5 seconds
+// OutboxPollerWorker - runs on a timer, e.g. every 5 seconds
 var rows = await connection.QueryAsync(
     "SELECT * FROM outbox WHERE sent_utc IS NULL ORDER BY id LIMIT 100");
 
